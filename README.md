@@ -23,9 +23,3 @@
 * **API Framework:** FastAPI, Uvicorn
 * **Model Persistence:** Joblib
 
-## ⚙️ Installation & Usage
-
-### 1. Clone the Repository
-```bash
-git clone [https://github.com/your-username/aegis-fraud-detection.git](https://github.com/your-username/aegis-fraud-detection.git)
-cd aegis-fraud-detection
