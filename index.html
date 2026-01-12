@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aegis | Fraud Detection System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-white font-sans">
+    <div class="container mx-auto px-4 py-10">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-blue-400">AEGIS SHIELD</h1>
+            <p class="text-slate-400">Real-Time AI Fraud Detection Interface</p>
+        </header>
+
+        <div class="max-w-2xl mx-auto bg-slate-800 p-8 rounded-xl shadow-2xl border border-slate-700">
+            <div class="grid grid-cols-1 gap-6">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Transaction Amount ($)</label>
+                    <input type="number" id="amount" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500" placeholder="e.g. 99.99">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">V-Features (Enter 28 values separated by commas)</label>
+                    <textarea id="v_features" rows="4" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500" placeholder="0.1, -1.2, 0.5..."></textarea>
+                    <p class="text-xs text-slate-500 mt-1">Note: Real Kaggle data uses 28 PCA components.</p>
+                </div>
+                <button onclick="checkFraud()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition duration-200">
+                    SCAN TRANSACTION
+                </button>
+            </div>
+
+            <div id="resultBox" class="mt-8 hidden p-4 rounded-lg text-center font-bold text-xl">
+                <span id="resultText"></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function checkFraud() {
+    const amountInput = document.getElementById('amount').value;
+    const vString = document.getElementById('v_features').value;
+    const resultBox = document.getElementById('resultBox');
+    const resultText = document.getElementById('resultText');
+
+    // 1. Clean the input (remove extra spaces)
+    const vArray = vString.split(',').map(item => item.trim()).filter(item => item !== "");
+
+    // 2. Clear previous results
+    resultBox.classList.add('hidden');
+
+    // 3. Check for errors
+    if (!amountInput) {
+        alert("Please enter a transaction amount.");
+        return;
+    }
+
+    if (vArray.length !== 28) {
+        alert("Error: You entered " + vArray.length + " values. The model needs exactly 28.");
+        return;
+    }
+
+    // 4. Send to API
+    try {
+        const response = await fetch('/predict', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ 
+                v_features: vArray.map(Number), 
+                amount: parseFloat(amountInput) 
+            })
+        });
+
+        const data = await response.json();
+        
+        // 5. Show Result
+        resultBox.classList.remove('hidden', 'bg-red-500', 'bg-green-500');
+        if (data.verdict === "FRAUD DETECTED") {
+            resultBox.classList.add('bg-red-500');
+            resultText.innerText = "🚨 ALERT: " + data.verdict;
+        } else {
+            resultBox.classList.add('bg-green-500');
+            resultText.innerText = "✅ STATUS: " + data.verdict;
+        }
+    } catch (error) {
+        alert("Connection Error: Is your Uvicorn server running?");
+    }
+}
+    </script>
+</body>
+</html>
